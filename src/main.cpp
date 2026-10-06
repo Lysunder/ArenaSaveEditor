@@ -249,12 +249,15 @@ int main(int argc, char *argv[])
 			"\n"
 			"1. Change HP\n"
 			"2. Change Max HP\n"
-			"3. Change Gold\n"
-			"4. Exit\n"
+			"3. Change Spell Points\n"
+			"4. Change Max Spell Points\n"
+			"5. Change Experience\n"
+			"6. Change Gold\n"
+			"7. Exit\n"
 			"> ";
 
 		std::string choice;
-		if (!std::getline(std::cin, choice) || choice == "4")
+		if (!std::getline(std::cin, choice) || choice == "7")
 		{
 			break;
 		}
@@ -284,6 +287,38 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "3")
 		{
+			if (!promptValue("Spell Points", UINT16_MAX, value))
+			{
+				continue;
+			}
+
+			save.setSpellPoints(static_cast<uint16_t>(value));
+			if (value > save.getMaxSpellPoints())
+			{
+				std::cout << "Note: Spell Points are now above Max Spell Points (" <<
+					save.getMaxSpellPoints() << ").\n";
+			}
+		}
+		else if (choice == "4")
+		{
+			if (!promptValue("Max Spell Points", UINT16_MAX, value))
+			{
+				continue;
+			}
+
+			save.setMaxSpellPoints(static_cast<uint16_t>(value));
+		}
+		else if (choice == "5")
+		{
+			if (!promptValue("Experience", UINT32_MAX, value))
+			{
+				continue;
+			}
+
+			save.setExperience(value);
+		}
+		else if (choice == "6")
+		{
 			if (!promptValue("Gold", UINT32_MAX, value))
 			{
 				continue;
@@ -293,7 +328,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			std::cout << "Please choose 1-4.\n";
+			std::cout << "Please choose 1-7.\n";
 			continue;
 		}
 

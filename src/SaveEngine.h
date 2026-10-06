@@ -49,6 +49,9 @@ public:
 
 	void setHealth(uint16_t value) { this->setU16(OFF_HP, value); }
 	void setMaxHealth(uint16_t value) { this->setU16(OFF_MAX_HP, value); }
+	void setSpellPoints(uint16_t value) { this->setU16(OFF_SP, value); }
+	void setMaxSpellPoints(uint16_t value) { this->setU16(OFF_MAX_SP, value); }
+	void setExperience(uint32_t value) { this->setU32(OFF_EXPERIENCE, value); }
 	void setGold(uint32_t value) { this->setU32(OFF_GOLD, value); }
 
 private:

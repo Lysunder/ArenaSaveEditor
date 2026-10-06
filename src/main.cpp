@@ -10,6 +10,21 @@
 
 namespace
 {
+	struct Potion
+	{
+		const char *name;
+		SaveEngine::ItemRecord record;
+	};
+
+	// Inventory records copied from identified potions in a real save.
+	const Potion HealingPotions[] =
+	{
+		{ "Potion of Healing", { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x0D, 0xFF } },
+		{ "Potion of Heal True", { 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x21, 0xFF } }
+	};
+
+	const uint32_t HealingPotionCount = sizeof(HealingPotions) / sizeof(HealingPotions[0]);
+
 	void printUsage(const char *exe)
 	{
 		std::cout <<
@@ -89,7 +104,9 @@ namespace
 			"Experience: " << save.getExperience() << "\n"
 			"Health:     " << save.getHealth() << " / " << save.getMaxHealth() << "\n"
 			"Spell pts:  " << save.getSpellPoints() << " / " << save.getMaxSpellPoints() << "\n"
-			"Gold:       " << save.getGold() << "\n";
+			"Gold:       " << save.getGold() << "\n"
+			"Inventory:  " << (SaveEngine::INVENTORY_SLOTS - save.countFreeInventorySlots()) <<
+				" / " << SaveEngine::INVENTORY_SLOTS << " slots used\n";
 	}
 
 	// Copies the save to SAVEENGN.xx.bak if no backup exists yet, then writes it.
@@ -175,7 +192,7 @@ namespace
 	{
 		while (true)
 		{
-			std::cout << "New " << label << " (0-" << max << ", blank to cancel): ";
+			std::cout << label << " (0-" << max << ", blank to cancel): ";
 			std::string line;
 			if (!std::getline(std::cin, line) || line.empty())
 			{
@@ -253,11 +270,12 @@ int main(int argc, char *argv[])
 			"4. Change Max Spell Points\n"
 			"5. Change Experience\n"
 			"6. Change Gold\n"
-			"7. Exit\n"
+			"7. Add Healing Potions\n"
+			"8. Exit\n"
 			"> ";
 
 		std::string choice;
-		if (!std::getline(std::cin, choice) || choice == "7")
+		if (!std::getline(std::cin, choice) || choice == "8")
 		{
 			break;
 		}
@@ -265,7 +283,7 @@ int main(int argc, char *argv[])
 		uint32_t value;
 		if (choice == "1")
 		{
-			if (!promptValue("HP", UINT16_MAX, value))
+			if (!promptValue("New HP", UINT16_MAX, value))
 			{
 				continue;
 			}
@@ -278,7 +296,7 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "2")
 		{
-			if (!promptValue("Max HP", UINT16_MAX, value))
+			if (!promptValue("New Max HP", UINT16_MAX, value))
 			{
 				continue;
 			}
@@ -287,7 +305,7 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "3")
 		{
-			if (!promptValue("Spell Points", UINT16_MAX, value))
+			if (!promptValue("New Spell Points", UINT16_MAX, value))
 			{
 				continue;
 			}
@@ -301,7 +319,7 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "4")
 		{
-			if (!promptValue("Max Spell Points", UINT16_MAX, value))
+			if (!promptValue("New Max Spell Points", UINT16_MAX, value))
 			{
 				continue;
 			}
@@ -310,7 +328,7 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "5")
 		{
-			if (!promptValue("Experience", UINT32_MAX, value))
+			if (!promptValue("New Experience", UINT32_MAX, value))
 			{
 				continue;
 			}
@@ -319,16 +337,47 @@ int main(int argc, char *argv[])
 		}
 		else if (choice == "6")
 		{
-			if (!promptValue("Gold", UINT32_MAX, value))
+			if (!promptValue("New Gold", UINT32_MAX, value))
 			{
 				continue;
 			}
 
 			save.setGold(value);
 		}
+		else if (choice == "7")
+		{
+			const uint32_t freeSlots = static_cast<uint32_t>(save.countFreeInventorySlots());
+			if (freeSlots == 0)
+			{
+				std::cout << "The inventory is full.\n";
+				continue;
+			}
+
+			std::cout << "\n";
+			for (uint32_t i = 0; i < HealingPotionCount; i++)
+			{
+				std::cout << (i + 1) << ". " << HealingPotions[i].name << "\n";
+			}
+
+			uint32_t potionNumber;
+			if (!promptValue("Potion type", HealingPotionCount, potionNumber) || potionNumber == 0)
+			{
+				continue;
+			}
+
+			uint32_t count;
+			if (!promptValue("How many", freeSlots, count) || count == 0)
+			{
+				continue;
+			}
+
+			const Potion &potion = HealingPotions[potionNumber - 1];
+			const size_t added = save.addItems(potion.record, count);
+			std::cout << "Added " << added << " x " << potion.name << ".\n";
+		}
 		else
 		{
-			std::cout << "Please choose 1-7.\n";
+			std::cout << "Please choose 1-8.\n";
 			continue;
 		}
 

@@ -1,5 +1,6 @@
 #include "SaveEngine.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 
@@ -71,6 +72,49 @@ std::string SaveEngine::getName() const
 	}
 
 	return std::string(start, length);
+}
+
+bool SaveEngine::isInventorySlotEmpty(size_t slot) const
+{
+	const uint8_t *item = this->data.data() + OFF_INVENTORY + (slot * ITEM_SIZE);
+	for (size_t i = 0; i < ITEM_SIZE; i++)
+	{
+		if (item[i] != 0)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+size_t SaveEngine::countFreeInventorySlots() const
+{
+	size_t count = 0;
+	for (size_t slot = 0; slot < INVENTORY_SLOTS; slot++)
+	{
+		if (this->isInventorySlotEmpty(slot))
+		{
+			count++;
+		}
+	}
+
+	return count;
+}
+
+size_t SaveEngine::addItems(const ItemRecord &record, size_t count)
+{
+	size_t added = 0;
+	for (size_t slot = 0; (slot < INVENTORY_SLOTS) && (added < count); slot++)
+	{
+		if (this->isInventorySlotEmpty(slot))
+		{
+			std::copy(record, record + ITEM_SIZE, this->data.begin() + OFF_INVENTORY + (slot * ITEM_SIZE));
+			added++;
+		}
+	}
+
+	return added;
 }
 
 uint16_t SaveEngine::getU16(size_t offset) const

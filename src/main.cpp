@@ -13,18 +13,10 @@ namespace
 	void printUsage(const char *exe)
 	{
 		std::cout <<
-			"Usage: " << exe << " <ARENA dir> <slot 0-9> [options]\n"
-			"\n"
-			"With no options, prints the save's current values.\n"
-			"\n"
-			"Options:\n"
-			"  --gold <n>      Set gold (0-4294967295)\n"
-			"  --hp <n>        Set current health (0-65535)\n"
-			"  --max-hp <n>    Set maximum health (0-65535)\n"
-			"  --no-backup     Don't create SAVEENGN.xx.bak before writing\n"
+			"Usage: " << exe << " <ARENA dir> <slot 0-9>\n"
 			"\n"
 			"Example:\n"
-			"  " << exe << " \"F:\\Steam\\steamapps\\common\\The Elder Scrolls Arena\\ARENA\" 0 --gold 5000 --hp 100 --max-hp 100\n";
+			"  " << exe << " \"F:\\Steam\\steamapps\\common\\The Elder Scrolls Arena\\ARENA\" 0\n";
 	}
 
 	bool parseUInt(const std::string &text, uint32_t max, uint32_t &out)
@@ -90,11 +82,57 @@ namespace
 			"Spell pts:  " << save.getSpellPoints() << " / " << save.getMaxSpellPoints() << "\n"
 			"Gold:       " << save.getGold() << "\n";
 	}
+
+	// Copies the save to SAVEENGN.xx.bak if no backup exists yet, then writes it.
+	bool writeSave(const SaveEngine &save, const std::string &path)
+	{
+		const std::string backupPath = path + ".bak";
+		if (!fileExists(backupPath))
+		{
+			if (!copyFile(path, backupPath))
+			{
+				std::cerr << "Could not create backup \"" << backupPath << "\"; not saving.\n";
+				return false;
+			}
+
+			std::cout << "Backup written to " << backupPath << "\n";
+		}
+
+		std::string error;
+		if (!save.save(path, error))
+		{
+			std::cerr << error << "\n";
+			return false;
+		}
+
+		return true;
+	}
+
+	// Prompts for a number. Returns false on blank input (cancel) or end of input.
+	bool promptValue(const std::string &label, uint32_t max, uint32_t &out)
+	{
+		while (true)
+		{
+			std::cout << "New " << label << " (0-" << max << ", blank to cancel): ";
+			std::string line;
+			if (!std::getline(std::cin, line) || line.empty())
+			{
+				return false;
+			}
+
+			if (parseUInt(line, max, out))
+			{
+				return true;
+			}
+
+			std::cout << "Please enter a whole number from 0 to " << max << ".\n";
+		}
+	}
 }
 
 int main(int argc, char *argv[])
 {
-	if (argc < 3)
+	if (argc != 3)
 	{
 		printUsage(argv[0]);
 		return 1;
@@ -113,41 +151,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	bool setGold = false, setHp = false, setMaxHp = false, backup = true;
-	uint32_t gold = 0, hp = 0, maxHp = 0;
-
-	for (int i = 3; i < argc; i++)
-	{
-		const std::string arg = argv[i];
-		const bool hasValue = (i + 1) < argc;
-
-		if (arg == "--gold" && hasValue && parseUInt(argv[i + 1], UINT32_MAX, gold))
-		{
-			setGold = true;
-			i++;
-		}
-		else if (arg == "--hp" && hasValue && parseUInt(argv[i + 1], UINT16_MAX, hp))
-		{
-			setHp = true;
-			i++;
-		}
-		else if (arg == "--max-hp" && hasValue && parseUInt(argv[i + 1], UINT16_MAX, maxHp))
-		{
-			setMaxHp = true;
-			i++;
-		}
-		else if (arg == "--no-backup")
-		{
-			backup = false;
-		}
-		else
-		{
-			std::cerr << "Bad or incomplete option: " << arg << "\n\n";
-			printUsage(argv[0]);
-			return 1;
-		}
-	}
-
 	char extension[4];
 	std::snprintf(extension, sizeof(extension), ".%02u", slot);
 	const std::string path = dir + "/SAVEENGN" + extension;
@@ -161,54 +164,67 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (!setGold && !setHp && !setMaxHp)
+	while (true)
 	{
+		std::cout << "\n";
 		printSave(save, slotName);
-		return 0;
-	}
+		std::cout <<
+			"\n"
+			"1. Change HP\n"
+			"2. Change Max HP\n"
+			"3. Change Gold\n"
+			"4. Exit\n"
+			"> ";
 
-	if (setGold)
-	{
-		save.setGold(gold);
-	}
-
-	if (setMaxHp)
-	{
-		save.setMaxHealth(static_cast<uint16_t>(maxHp));
-	}
-
-	if (setHp)
-	{
-		save.setHealth(static_cast<uint16_t>(hp));
-		if (hp > save.getMaxHealth())
+		std::string choice;
+		if (!std::getline(std::cin, choice) || choice == "4")
 		{
-			std::cout << "Warning: health " << hp << " exceeds max health " <<
-				save.getMaxHealth() << "; consider --max-hp too.\n";
+			break;
 		}
-	}
 
-	if (backup)
-	{
-		const std::string backupPath = path + ".bak";
-		if (!fileExists(backupPath))
+		uint32_t value;
+		if (choice == "1")
 		{
-			if (!copyFile(path, backupPath))
+			if (!promptValue("HP", UINT16_MAX, value))
 			{
-				std::cerr << "Could not create backup \"" << backupPath << "\"; aborting.\n";
-				return 1;
+				continue;
 			}
 
-			std::cout << "Backup written to " << backupPath << "\n";
+			save.setHealth(static_cast<uint16_t>(value));
+			if (value > save.getMaxHealth())
+			{
+				std::cout << "Note: HP is now above Max HP (" << save.getMaxHealth() << ").\n";
+			}
+		}
+		else if (choice == "2")
+		{
+			if (!promptValue("Max HP", UINT16_MAX, value))
+			{
+				continue;
+			}
+
+			save.setMaxHealth(static_cast<uint16_t>(value));
+		}
+		else if (choice == "3")
+		{
+			if (!promptValue("Gold", UINT32_MAX, value))
+			{
+				continue;
+			}
+
+			save.setGold(value);
+		}
+		else
+		{
+			std::cout << "Please choose 1-4.\n";
+			continue;
+		}
+
+		if (writeSave(save, path))
+		{
+			std::cout << "Saved.\n";
 		}
 	}
 
-	if (!save.save(path, error))
-	{
-		std::cerr << error << "\n";
-		return 1;
-	}
-
-	std::cout << "Saved.\n\n";
-	printSave(save, slotName);
 	return 0;
 }

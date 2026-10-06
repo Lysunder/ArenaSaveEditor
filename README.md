@@ -18,11 +18,20 @@ Or with CMake (e.g. Visual Studio): `cmake -B build && cmake --build build --con
 ## Usage
 
 ```
-ArenaSaveEditor <ARENA dir> <slot 0-9> [--gold N] [--hp N] [--max-hp N] [--no-backup]
+ArenaSaveEditor <ARENA dir> <slot 0-9>
 ```
 
-With no options it prints the save's current values. Before the first write to a slot,
-the original `SAVEENGN.xx` is copied to `SAVEENGN.xx.bak` (an existing backup is never overwritten).
+This shows the save's current values and a menu:
+
+```
+1. Change HP
+2. Change Max HP
+3. Change Gold
+4. Exit
+```
+
+Each change is written to the save immediately. Before the first write to a slot, the
+original `SAVEENGN.xx` is copied to `SAVEENGN.xx.bak` (an existing backup is never overwritten).
 
 ## Save format notes
 

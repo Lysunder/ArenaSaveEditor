@@ -1,0 +1,49 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/Release/ArenaSaveEditor.exe, README.md, LICENSE dist/
+          Compress-Archive -Path dist/* -DestinationPath ArenaSaveEditor.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArenaSaveEditor
+          path: ArenaSaveEditor.zip
+
+      # Only pushes to master (i.e. merged PRs) and manual runs publish a release.
+      - name: Create release
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v0.1.${{ github.run_number }}"
+          gh release create $tag ArenaSaveEditor.zip `
+            --target ${{ github.sha }} `
+            --title "ArenaSaveEditor $tag" `
+            --generate-notes

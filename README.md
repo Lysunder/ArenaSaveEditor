@@ -50,9 +50,9 @@ starts at 3663 and decrements per byte. The rest of the file is not scrambled.
 | Name         | 9                  | char[32] |
 | Current HP   | 89                 | uint16 |
 | Max HP       | 91                 | uint16 |
-| Inventory    | 110                | 40 x 19-byte item records (all zero = empty) |
 | Spell points | 102                | uint16 |
 | Max spell pts| 104                | uint16 |
+| Inventory    | 110                | 40 x 19-byte item records (all zero = empty) |
 | Experience   | 1033               | uint32 |
 | Gold         | 1054 (PlayerData+0)| uint32 |
 

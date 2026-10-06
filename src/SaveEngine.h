@@ -27,10 +27,17 @@ public:
 	static constexpr size_t OFF_LEVEL = 6;          // uint8
 	static constexpr size_t OFF_HP = 89;            // uint16
 	static constexpr size_t OFF_MAX_HP = 91;        // uint16
+	static constexpr size_t OFF_INVENTORY = 110;    // InventoryItem[40]
 	static constexpr size_t OFF_SP = 102;           // uint16
 	static constexpr size_t OFF_MAX_SP = 104;       // uint16
 	static constexpr size_t OFF_EXPERIENCE = 1033;  // uint32
 	static constexpr size_t OFF_GOLD = NPC_DATA_SIZE + 0; // uint32, PlayerData::gold
+
+	static constexpr size_t INVENTORY_SLOTS = 40;
+	static constexpr size_t ITEM_SIZE = 19;
+
+	// One raw 19-byte inventory record. An all-zero record is an empty slot.
+	typedef uint8_t ItemRecord[ITEM_SIZE];
 
 	bool load(const std::string &path, std::string &error);
 	bool save(const std::string &path, std::string &error) const;
@@ -52,6 +59,11 @@ public:
 	void setSpellPoints(uint16_t value) { this->setU16(OFF_SP, value); }
 	void setMaxSpellPoints(uint16_t value) { this->setU16(OFF_MAX_SP, value); }
 	void setExperience(uint32_t value) { this->setU32(OFF_EXPERIENCE, value); }
+
+	size_t countFreeInventorySlots() const;
+
+	// Copies the record into up to `count` empty inventory slots. Returns how many were added.
+	size_t addItems(const ItemRecord &record, size_t count);
 	void setGold(uint32_t value) { this->setU32(OFF_GOLD, value); }
 
 private:
@@ -60,6 +72,8 @@ private:
 
 	// Same operation both ways (XOR).
 	static void scramble(uint8_t *bytes, size_t length);
+
+	bool isInventorySlotEmpty(size_t slot) const;
 
 	uint16_t getU16(size_t offset) const;
 	uint32_t getU32(size_t offset) const;

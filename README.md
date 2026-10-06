@@ -31,7 +31,8 @@ and asks which one to edit. It then shows the save's current values and a menu:
 4. Change Max Spell Points
 5. Change Experience
 6. Change Gold
-7. Exit
+7. Add Healing Potions
+8. Exit
 ```
 
 Each change is written to the save immediately. Before the first write to a slot, the
@@ -51,6 +52,7 @@ starts at 3663 and decrements per byte. The rest of the file is not scrambled.
 | Max HP       | 91                 | uint16 |
 | Spell points | 102                | uint16 |
 | Max spell pts| 104                | uint16 |
+| Inventory    | 110                | 40 x 19-byte item records (all zero = empty) |
 | Experience   | 1033               | uint32 |
 | Gold         | 1054 (PlayerData+0)| uint32 |
 

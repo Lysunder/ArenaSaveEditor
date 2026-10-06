@@ -18,11 +18,24 @@ Or with CMake (e.g. Visual Studio): `cmake -B build && cmake --build build --con
 ## Usage
 
 ```
-ArenaSaveEditor <ARENA dir> <slot 0-9> [--gold N] [--hp N] [--max-hp N] [--no-backup]
+ArenaSaveEditor <ARENA dir> [slot 0-9]
 ```
 
-With no options it prints the save's current values. Before the first write to a slot,
-the original `SAVEENGN.xx` is copied to `SAVEENGN.xx.bak` (an existing backup is never overwritten).
+Without a slot, it lists the saves from `NAMES.DAT` (with each character's name and level)
+and asks which one to edit. It then shows the save's current values and a menu:
+
+```
+1. Change HP
+2. Change Max HP
+3. Change Spell Points
+4. Change Max Spell Points
+5. Change Experience
+6. Change Gold
+7. Exit
+```
+
+Each change is written to the save immediately. Before the first write to a slot, the
+original `SAVEENGN.xx` is copied to `SAVEENGN.xx.bak` (an existing backup is never overwritten).
 
 ## Save format notes
 
@@ -36,6 +49,8 @@ starts at 3663 and decrements per byte. The rest of the file is not scrambled.
 | Name         | 9                  | char[32] |
 | Current HP   | 89                 | uint16 |
 | Max HP       | 91                 | uint16 |
+| Spell points | 102                | uint16 |
+| Max spell pts| 104                | uint16 |
 | Experience   | 1033               | uint32 |
 | Gold         | 1054 (PlayerData+0)| uint32 |
 

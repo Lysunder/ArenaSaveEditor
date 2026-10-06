@@ -18,10 +18,11 @@ Or with CMake (e.g. Visual Studio): `cmake -B build && cmake --build build --con
 ## Usage
 
 ```
-ArenaSaveEditor <ARENA dir> <slot 0-9>
+ArenaSaveEditor <ARENA dir> [slot 0-9]
 ```
 
-This shows the save's current values and a menu:
+Without a slot, it lists the saves from `NAMES.DAT` (with each character's name and level)
+and asks which one to edit. It then shows the save's current values and a menu:
 
 ```
 1. Change HP

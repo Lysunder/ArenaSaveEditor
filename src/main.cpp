@@ -13,10 +13,19 @@ namespace
 	void printUsage(const char *exe)
 	{
 		std::cout <<
-			"Usage: " << exe << " <ARENA dir> <slot 0-9>\n"
+			"Usage: " << exe << " <ARENA dir> [slot 0-9]\n"
+			"\n"
+			"Without a slot, lists the saves in NAMES.DAT to choose from.\n"
 			"\n"
 			"Example:\n"
-			"  " << exe << " \"F:\\Steam\\steamapps\\common\\The Elder Scrolls Arena\\ARENA\" 0\n";
+			"  " << exe << " \"F:\\Steam\\steamapps\\common\\The Elder Scrolls Arena\\ARENA\"\n";
+	}
+
+	std::string makeSavePath(const std::string &dir, uint32_t slot)
+	{
+		char extension[4];
+		std::snprintf(extension, sizeof(extension), ".%02u", slot);
+		return dir + "/SAVEENGN" + extension;
 	}
 
 	bool parseUInt(const std::string &text, uint32_t max, uint32_t &out)
@@ -108,6 +117,59 @@ namespace
 		return true;
 	}
 
+	// Prints the used save slots and marks them in `used`. Returns false if there are none.
+	bool listSaves(const std::string &dir, bool (&used)[10])
+	{
+		bool anyUsed = false;
+
+		std::cout << "Saves in " << dir << ":\n\n";
+		for (uint32_t i = 0; i < 10; i++)
+		{
+			// Unused slots are named "EMPTY" in NAMES.DAT.
+			const std::string name = readSlotName(dir, static_cast<int>(i));
+			if (name.empty() || name == "EMPTY")
+			{
+				continue;
+			}
+
+			SaveEngine save;
+			std::string error;
+			if (!save.load(makeSavePath(dir, i), error))
+			{
+				continue;
+			}
+
+			std::cout << "  " << i << ". " << name << "  (" << save.getName() <<
+				", level " << (save.getLevel() + 1) << ")\n";
+			used[i] = true;
+			anyUsed = true;
+		}
+
+		std::cout << "\n";
+		return anyUsed;
+	}
+
+	// Asks which of the listed saves to edit. Returns false if the user cancels.
+	bool pickSlot(const bool (&used)[10], uint32_t &slot)
+	{
+		while (true)
+		{
+			std::cout << "Choose a save (blank to exit): ";
+			std::string line;
+			if (!std::getline(std::cin, line) || line.empty())
+			{
+				return false;
+			}
+
+			if (parseUInt(line, 9, slot) && used[slot])
+			{
+				return true;
+			}
+
+			std::cout << "Please choose one of the saves listed above.\n";
+		}
+	}
+
 	// Prompts for a number. Returns false on blank input (cancel) or end of input.
 	bool promptValue(const std::string &label, uint32_t max, uint32_t &out)
 	{
@@ -132,7 +194,7 @@ namespace
 
 int main(int argc, char *argv[])
 {
-	if (argc != 3)
+	if (argc != 2 && argc != 3)
 	{
 		printUsage(argv[0]);
 		return 1;
@@ -145,15 +207,30 @@ int main(int argc, char *argv[])
 	}
 
 	uint32_t slot;
-	if (!parseUInt(argv[2], 9, slot))
+	if (argc == 3)
 	{
-		std::cerr << "Slot must be 0-9.\n";
-		return 1;
+		if (!parseUInt(argv[2], 9, slot))
+		{
+			std::cerr << "Slot must be 0-9.\n";
+			return 1;
+		}
+	}
+	else
+	{
+		bool used[10] = {};
+		if (!listSaves(dir, used))
+		{
+			std::cerr << "No saves found. Is this the ARENA folder?\n";
+			return 1;
+		}
+
+		if (!pickSlot(used, slot))
+		{
+			return 0;
+		}
 	}
 
-	char extension[4];
-	std::snprintf(extension, sizeof(extension), ".%02u", slot);
-	const std::string path = dir + "/SAVEENGN" + extension;
+	const std::string path = makeSavePath(dir, slot);
 	const std::string slotName = readSlotName(dir, static_cast<int>(slot));
 
 	SaveEngine save;

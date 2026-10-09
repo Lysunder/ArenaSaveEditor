@@ -17,13 +17,14 @@ namespace
 	};
 
 	// Inventory records copied from identified potions in a real save.
-	const Potion HealingPotions[] =
+	const Potion Potions[] =
 	{
 		{ "Potion of Healing", { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x0D, 0xFF } },
-		{ "Potion of Heal True", { 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x21, 0xFF } }
+		{ "Potion of Heal True", { 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x21, 0xFF } },
+		{ "Potion of Power", { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0xFF, 0xFF } }
 	};
 
-	const uint32_t HealingPotionCount = sizeof(HealingPotions) / sizeof(HealingPotions[0]);
+	const uint32_t PotionCount = sizeof(Potions) / sizeof(Potions[0]);
 
 	void printUsage(const char *exe)
 	{
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
 			"4. Change Max Spell Points\n"
 			"5. Change Experience\n"
 			"6. Change Gold\n"
-			"7. Add Healing Potions\n"
+			"7. Add Potions\n"
 			"8. Exit\n"
 			"> ";
 
@@ -354,13 +355,13 @@ int main(int argc, char *argv[])
 			}
 
 			std::cout << "\n";
-			for (uint32_t i = 0; i < HealingPotionCount; i++)
+			for (uint32_t i = 0; i < PotionCount; i++)
 			{
-				std::cout << (i + 1) << ". " << HealingPotions[i].name << "\n";
+				std::cout << (i + 1) << ". " << Potions[i].name << "\n";
 			}
 
 			uint32_t potionNumber;
-			if (!promptValue("Potion type", HealingPotionCount, potionNumber) || potionNumber == 0)
+			if (!promptValue("Potion type", PotionCount, potionNumber) || potionNumber == 0)
 			{
 				continue;
 			}
@@ -371,7 +372,7 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			const Potion &potion = HealingPotions[potionNumber - 1];
+			const Potion &potion = Potions[potionNumber - 1];
 			const size_t added = save.addItems(potion.record, count);
 			std::cout << "Added " << added << " x " << potion.name << ".\n";
 		}

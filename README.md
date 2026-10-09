@@ -31,7 +31,7 @@ and asks which one to edit. It then shows the save's current values and a menu:
 4. Change Max Spell Points
 5. Change Experience
 6. Change Gold
-7. Add Healing Potions
+7. Add Potions
 8. Exit
 ```
 

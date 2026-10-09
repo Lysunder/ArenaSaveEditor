@@ -7,6 +7,7 @@
 #include <string>
 
 #include "SaveEngine.h"
+#include "Version.h"
 
 namespace
 {
@@ -212,6 +213,8 @@ namespace
 
 int main(int argc, char *argv[])
 {
+	std::cout << "ArenaSaveEditor v" ARENA_SAVE_EDITOR_VERSION "\n\n";
+
 	if (argc != 2 && argc != 3)
 	{
 		printUsage(argv[0]);

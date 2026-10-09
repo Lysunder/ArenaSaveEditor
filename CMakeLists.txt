@@ -10,6 +10,8 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 add_executable(ArenaSaveEditor
 	src/main.cpp
 	src/SaveEngine.cpp
+	src/SaveEngine.h
+	src/Version.h
 )
 
 if(MSVC)

@@ -3,7 +3,8 @@ A simple save game editor for Arena
 
 ## Download
 
-Prebuilt Windows binaries are on the [Releases](https://github.com/Lysunder/ArenaSaveEditor/releases) page. A new release is built automatically each time something is merged into `master`.
+Prebuilt Windows binaries are on the [Releases](https://github.com/Lysunder/ArenaSaveEditor/releases) page. A new release is built automatically when something is merged into `master` with a new
+version number in [`src/Version.h`](src/Version.h); bump it in any PR that should be released.
 
 ## Building
 

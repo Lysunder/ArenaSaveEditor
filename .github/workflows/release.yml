@@ -15,6 +15,24 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path src/Version.h -Pattern '#define ARENA_SAVE_EDITOR_VERSION "([0-9]+\.[0-9]+\.[0-9]+)"'
+          if (-not $match) { throw "Could not find ARENA_SAVE_EDITOR_VERSION in src/Version.h" }
+          $version = $match.Matches[0].Groups[1].Value
+          $tag = "v$version"
+          $exists = [bool](git tag --list $tag)
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "exists=$($exists.ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          if ($exists) {
+            Write-Output "::warning::Release $tag already exists. Bump the version in src/Version.h to publish a new release when this is merged."
+          }
 
       - name: Configure
         run: cmake -S . -B build -A x64
@@ -35,14 +53,15 @@ jobs:
           name: ArenaSaveEditor
           path: ArenaSaveEditor.zip
 
-      # Only pushes to master (i.e. merged PRs) and manual runs publish a release.
+      # Only pushes to master (i.e. merged PRs) and manual runs publish a release,
+      # and only when src/Version.h holds a version that hasn't been released yet.
       - name: Create release
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.version.outputs.exists != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v0.1.${{ github.run_number }}"
+          $tag = "${{ steps.version.outputs.tag }}"
           gh release create $tag ArenaSaveEditor.zip `
             --target ${{ github.sha }} `
             --title "ArenaSaveEditor $tag" `

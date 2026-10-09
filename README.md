@@ -3,7 +3,8 @@ A simple save game editor for Arena
 
 ## Download
 
-Prebuilt Windows binaries are on the [Releases](https://github.com/Lysunder/ArenaSaveEditor/releases) page. A new release is built automatically each time something is merged into `master`.
+Prebuilt Windows binaries are on the [Releases](https://github.com/Lysunder/ArenaSaveEditor/releases) page. A new release is built automatically when something is merged into `master` with a new
+version number in [`src/Version.h`](src/Version.h); bump it in any PR that should be released.
 
 ## Building
 
@@ -31,7 +32,7 @@ and asks which one to edit. It then shows the save's current values and a menu:
 4. Change Max Spell Points
 5. Change Experience
 6. Change Gold
-7. Add Healing Potions
+7. Add Potions
 8. Exit
 ```
 
